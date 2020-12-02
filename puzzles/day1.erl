@@ -24,17 +24,9 @@ get_all_lines(Device) ->
         Line -> Line ++ get_all_lines(Device)
     end.
 
-puzzle1(Filename) ->
-    Input = readlines(Filename),
-    BitList = re:split(Input, "\n"),
-    NumList = lists:filtermap(fun(X) -> case X of <<>> -> false; _ -> {true, binary_to_integer(X)} end end, BitList),
-    find_complements(2020, NumList).
-
-puzzle2(Filename) ->
-    Input = readlines(Filename),
-    BitList = re:split(Input, "\n"),
-    NumList = lists:filtermap(fun(X) -> case X of <<>> -> false; _ -> {true, binary_to_integer(X)} end end, BitList),
-    find_triples(2020, NumList, NumList).
+parse_input(Lines) ->
+    BitList = re:split(Lines, "\n"),
+    lists:filtermap(fun(X) -> case X of <<>> -> false; _ -> {true, binary_to_integer(X)} end end, BitList).
 
 find_triples(Sum, [Head | NewList], OrigList) ->
     NewSum = Sum - Head,
@@ -43,7 +35,7 @@ find_triples(Sum, [Head | NewList], OrigList) ->
         Other -> Head * Other
     end.
 
-find_complements(Sum, [])->
+find_complements(_Sum, []) ->
     false;
 find_complements(Sum, [Head | NumList]) ->
     case lists:member(Sum - Head, NumList) of
@@ -51,3 +43,11 @@ find_complements(Sum, [Head | NumList]) ->
             Head * (Sum - Head);
         false -> find_complements(Sum, NumList)
     end.
+
+puzzle1(Filename) ->
+    NumList = parse_input(readlines(Filename)),
+    find_complements(2020, NumList).
+
+puzzle2(Filename) ->
+    NumList = parse_input(readlines(Filename)),
+    find_triples(2020, NumList, NumList).
