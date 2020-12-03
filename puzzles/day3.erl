@@ -26,6 +26,7 @@ get_all_lines(Device) ->
 
 parse_input(Lines) ->
     BitList = re:split(Lines, "\n"),
+    %% Map all lines to lists so we can use slice (since erlang lacks a concept of indexing in binary strings)
     lists:filtermap(fun(X) -> case X of <<>> -> false; _ -> {true, binary_to_list(X)} end end, BitList).
 
 would_hit_tree(Line, Pos) ->
@@ -34,6 +35,13 @@ would_hit_tree(Line, Pos) ->
         "." -> false
     end.
 
+%% Should definitely not expose this in the API, but w/e
+%% Param 1: List of lines including the current one.
+%% Param 2: Position on the current turn.
+%% Paran 3: Accumulator of trees we've hit so far.
+%% Param 4: Number of spaces to move right next turn.
+%% Param 5: Number of spaces to move down next turn. Can only be 1 or 2.
+%% Param 6: Whether to search for crashes this turn. Only used when down is 2.
 check_lines([Head | Lines], Pos, Acc, Right, Down, Check_Line) ->
     NewPos = Pos rem 31,
     case Down of
@@ -43,6 +51,8 @@ check_lines([Head | Lines], Pos, Acc, Right, Down, Check_Line) ->
                 false -> check_lines(Lines, NewPos + Right, Acc, Right, Down, Check_Line)
             end;
         2 ->
+            %% If we check this turn, don't check next turn and vice versa.
+            %% Only increment the position when we check for a crash.
             case Check_Line of
                 true ->
                     case would_hit_tree(Head, NewPos) of
